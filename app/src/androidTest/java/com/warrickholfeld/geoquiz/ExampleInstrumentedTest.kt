@@ -1,3 +1,5 @@
+@file:Suppress("SpellCheckingInspection", "SpellCheckingInspection")
+
 package com.warrickholfeld.geoquiz
 
 import androidx.test.platform.app.InstrumentationRegistry

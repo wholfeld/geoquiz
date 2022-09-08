@@ -1,9 +1,12 @@
 package com.warrickholfeld.geoquiz
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 
 const val CURRENT_INDEX_KEY = "CURRENT_INDEX_KEY"
+
+private const val TAG = "QuizViewModel"
 
 class QuizViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
     private val questionBank = listOf(
@@ -44,6 +47,7 @@ class QuizViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
         get() = seen.contains(currentIndex)
 
     fun moveToNext() {
+//        Log.d(TAG, "Updating question text", Exception())
         currentIndex = (currentIndex + 1) % questionBank.size
     }
     fun moveToPrevious() {
