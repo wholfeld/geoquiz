@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.viewModels
 import com.warrickholfeld.geoquiz.databinding.ActivityMainBinding
 
 private const val TAG = "MainActivity"
@@ -12,23 +13,15 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    private val quizViewModel: QuizViewModel by viewModels()
 
-    private val questionBank = listOf(
-        Question(R.string.question_australia,true),
-        Question(R.string.question_oceans,true),
-        Question(R.string.question_mideast,false),
-        Question(R.string.question_africa,false),
-        Question(R.string.question_americas,true),
-        Question(R.string.question_asia,true))
 
-    private val seen = mutableSetOf<Int>()
-
-    private var currentIndex = 0
-    private var score = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate(Bundle?) called")
+
+        Log.d(TAG, "Got a QuizViewModel: $quizViewModel")
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -40,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         binding.falseButton.setOnClickListener {
             checkAnswer(false)
         }
-        val questionTextResId = questionBank[currentIndex].textResId
+        val questionTextResId = quizViewModel.currentQuestionText
         binding.questionTextView.setText(questionTextResId)
         binding.questionTextView.setOnClickListener {
             nextQuestion()
@@ -51,19 +44,7 @@ class MainActivity : AppCompatActivity() {
         }
         updateQuestion()
         binding.previousButton.setOnClickListener {
-            currentIndex = if (currentIndex == 0) {
-                questionBank.size - 1
-            } else {
-                currentIndex - 1
-            }
-            Log.d(TAG, "Current question index: $currentIndex")
-
-            try {
-                val question = questionBank[currentIndex]
-            } catch (ex: ArrayIndexOutOfBoundsException) {
-                // Log a message at ERROR log level along with an exception stack trace
-                Log.e(TAG, "Index was out of bounds I made this error message", ex)
-            }
+            quizViewModel.moveToPrevious()
             updateQuestion()
         }
     }
@@ -94,14 +75,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun nextQuestion() {
-        currentIndex = (currentIndex + 1) % questionBank.size
+        quizViewModel.moveToNext()
         updateQuestion()
     }
 
     private fun updateQuestion() {
-        val questionTextResId = questionBank[currentIndex].textResId
+        val questionTextResId = quizViewModel.currentQuestionText
         binding.questionTextView.setText(questionTextResId)
-        if (seen.contains(currentIndex)) {
+        if (quizViewModel.isDisabled) {
             disableButtons(true)
         } else {
             disableButtons(false)
@@ -119,24 +100,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
-        if (userAnswer == correctAnswer) {
-            score += 1
-        }
-        seen.add(currentIndex)
+        val successfulAnswer = quizViewModel.checkAnswer(userAnswer)
         updateQuestion()
         nextQuestion()
 
-        val messageResId = if (userAnswer == correctAnswer) {
+        val messageResId = if (successfulAnswer) {
             R.string.correct_toast
         } else {
             R.string.incorrect_toast
         }
 
-//        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
-        if (seen.size == questionBank.size) {
-            val finalScore = (score.toDouble() / questionBank.size) * 100
-            val finalPercentage = String.format("%.0f%%", finalScore)
+        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
+        if (quizViewModel.finished) {
+            val finalPercentage = quizViewModel.getCorrectPercentageString
+            val score = quizViewModel.getScore
             println(finalPercentage)
             Toast.makeText(this, "You got $score right. That's $finalPercentage", Toast.LENGTH_SHORT).show()
         }
