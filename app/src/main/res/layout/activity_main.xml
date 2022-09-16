@@ -68,4 +68,12 @@
         tools:ignore="ButtonStyle" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/sdk_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        android:gravity="center"
+        android:textStyle="bold"/>
 </LinearLayout>
